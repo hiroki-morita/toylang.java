@@ -25,6 +25,24 @@ public interface Expr {
         }
     }
 
+    public class Bool implements Expr {
+        final boolean b;
+
+        public Bool(boolean b) {
+            this.b = b;
+        }
+
+        @Override
+        public Value eval(Env env) {
+            return new Value.Bool(b);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("[Bool %b]", b);
+        }
+    }
+
     public class BinOp implements Expr {
         public enum Kind {
             ADD("+", Value.Op.ADD), // 加算
