@@ -12,9 +12,11 @@ import java.util.List;
  * 
  * LetExpr -> LET IDENT EQ Expr (IN Expr)?
  * 
+ * AndOrExpr -> CompareExpr ((ANDAND|OROR) CompareExpr)?
+ * CompareExpr -> AddSubExpr ((EQ|LT|GT) AddSubExpr)?
  * AddSubExpr -> MulDivExpr ((ADDOP|SUBOP) MulDivExpr)?
  * MulDivExpr -> Primary ((MULOP|DIVOP) Primary)?
- * Primary -> LPAREN Expr RPAREN | INT | IDENT
+ * Primary -> LPAREN Expr RPAREN | INT | IDENT | TRUE | FALSE
  */
 public class Parser {
     private final List<Token> toks;
@@ -42,9 +44,9 @@ public class Parser {
         if (tok.kind() == Token.Kind.LET) {
             return letExpr();
         }
-        // AddSubExpr
+        // AndOrExpr
         else {
-            return addSubExpr();
+            return andOrExpr();
         }
     }
 
@@ -63,6 +65,54 @@ public class Parser {
         // (else)
         else {
             return new Expr.Let(ident.name, e);
+        }
+    }
+
+    private Expr andOrExpr() {
+        final var l = compareExpr();
+        var tok = toks.get(pos);
+        // CompareExpr ANDAND CompareExpr
+        if (tok.kind() == Token.Kind.ANDAND) {
+            pos++; // consume ANDAND
+            final var r = compareExpr();
+            return new Expr.BinOp(Expr.BinOp.Kind.AND, l, r);
+        }
+        // CompareExpr ANDAND CompareExpr
+        if (tok.kind() == Token.Kind.OROR) {
+            pos++; // consume OROR
+            final var r = compareExpr();
+            return new Expr.BinOp(Expr.BinOp.Kind.OR, l, r);
+        }
+        // CompareExpr
+        else {
+            return l;
+        }
+    }
+
+    private Expr compareExpr() {
+        final var l = addSubExpr();
+        var tok = toks.get(pos);
+        // AddSubExpr EQ AddSubExpr
+        if (tok.kind() == Token.Kind.EQ) {
+            pos++; // consume EQ
+            final var r = addSubExpr();
+            return new Expr.BinOp(Expr.BinOp.Kind.EQ, l, r);
+        }
+        // AddSubExpr LT AddSubExpr
+        if (tok.kind() == Token.Kind.LT) {
+            pos++; // consume LT
+            final var r = addSubExpr();
+            return new Expr.BinOp(Expr.BinOp.Kind.LT, l, r);
+        }
+        // AddSubExpr GT AddSubExpr
+        if (tok.kind() == Token.Kind.GT) {
+            pos++; // consume GT
+            final var r = addSubExpr();
+            return new Expr.BinOp(Expr.BinOp.Kind.GT, l, r);
+        }
+        // AddSubExpr
+        else {
+            return l;
         }
     }
 
@@ -128,6 +178,16 @@ public class Parser {
             pos++; // consume IDENT
             final var ident = (Token.Ident) (tok);
             return new Expr.Ident(ident.name);
+        }
+        // TRUE
+        if (tok.kind() == Token.Kind.TRUE) {
+            pos++; // consume TRUE
+            return new Expr.Bool(true);
+        }
+        // FALSE
+        if (tok.kind() == Token.Kind.FALSE) {
+            pos++; // consume FALSE
+            return new Expr.Bool(false);
         }
         // error!
         throw new RuntimeException("unknown token: " + tok);

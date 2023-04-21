@@ -74,8 +74,14 @@ public class Lexer {
         case LPAREN:
         case RPAREN:
         case EQ:
+        case LT:
+        case GT:
+        case ANDAND:
+        case OROR:
         case LET:
         case IN:
+        case TRUE:
+        case FALSE:
             return new Token.Fixed(kind);
         case INT:
             final int n = Integer.parseInt(str);

@@ -14,8 +14,14 @@ public interface Token {
         LPAREN("(", "\\("), // "("
         RPAREN(")", "\\)"), // ")"
         EQ("=", "="), // "="
+        LT("<", "<"), // "<"
+        GT(">", ">"), // ">"
+        ANDAND("&&", "&&"), // "&&"
+        OROR("||", "\\|\\|"), // "||"
         LET("let", "let"), // "let"
         IN("in", "in"), // "in"
+        TRUE("true", "true"), // "true"
+        FALSE("false", "false"), // "false"
         INT(null, "-?(0|[1-9][0-9]*)"), // 整数リテラル
         IDENT(null, "[a-zA-Z_][a-zA-Z0-9_]*"), // 識別子
         EOF(null, null); // EOF

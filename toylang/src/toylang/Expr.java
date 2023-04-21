@@ -48,7 +48,12 @@ public interface Expr {
             ADD("+", Value.Op.ADD), // 加算
             SUB("-", Value.Op.SUB), // 減算
             MUL("*", Value.Op.MUL), // 乗算
-            DIV("/", Value.Op.DIV); // 除算
+            DIV("/", Value.Op.DIV), // 除算
+            EQ("=", Value.Op.EQ), // 比較（等価）
+            LT("<", Value.Op.LT), // 比較（小なり）
+            GT(">", Value.Op.GT), // 比較（大なり）
+            AND("&&", Value.Op.AND), // 論理積
+            OR("||", Value.Op.OR); // 論理和
 
             final String text;
             final Value.Op valOp;
