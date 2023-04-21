@@ -13,7 +13,11 @@ public interface Token {
         DIVOP("/", "/"), // "/"
         LPAREN("(", "\\("), // "("
         RPAREN(")", "\\)"), // ")"
+        EQ("=", "="), // "="
+        LET("let", "let"), // "let"
+        IN("in", "in"), // "in"
         INT(null, "-?(0|[1-9][0-9]*)"), // 整数リテラル
+        IDENT(null, "[a-zA-Z_][a-zA-Z0-9_]*"), // 識別子
         EOF(null, null); // EOF
 
         final String fixedText;
@@ -71,6 +75,29 @@ public interface Token {
         @Override
         public String toString() {
             return String.format("Token [Int(%s)]", str);
+        }
+    }
+
+    public class Ident implements Token {
+        final String name;
+
+        public Ident(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public Kind kind() {
+            return Kind.IDENT;
+        }
+
+        @Override
+        public String text() {
+            return name;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("Token [Ident(%s)]", name);
         }
     }
 

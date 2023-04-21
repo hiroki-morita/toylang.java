@@ -8,11 +8,13 @@ import java.util.List;
  * 
  * ## 文法
  * 
- * Expr -> AddSubExpr
+ * Expr -> LetExpr | AddSubExpr
+ * 
+ * LetExpr -> LET IDENT EQ Expr (IN Expr)?
  * 
  * AddSubExpr -> MulDivExpr ((ADDOP|SUBOP) MulDivExpr)?
  * MulDivExpr -> Primary ((MULOP|DIVOP) Primary)?
- * Primary -> LPAREN Expr RPAREN | INT
+ * Primary -> LPAREN Expr RPAREN | INT | IDENT
  */
 public class Parser {
     private final List<Token> toks;
@@ -35,7 +37,33 @@ public class Parser {
     }
 
     private Expr expr() {
-        return addSubExpr();
+        final var tok = toks.get(pos);
+        // LetExpr
+        if (tok.kind() == Token.Kind.LET) {
+            return letExpr();
+        }
+        // AddSubExpr
+        else {
+            return addSubExpr();
+        }
+    }
+
+    private Expr letExpr() {
+        pos++; // consume LET
+        final var ident = (Token.Ident) (toks.get(pos++));
+        pos++; // consume EQ
+        final var e = expr();
+        var tok = toks.get(pos);
+        // IN Expr
+        if (tok.kind() == Token.Kind.IN) {
+            pos++; // consume IN
+            final var suc = expr();
+            return new Expr.Let(ident.name, e, suc);
+        }
+        // (else)
+        else {
+            return new Expr.Let(ident.name, e);
+        }
     }
 
     private Expr addSubExpr() {
@@ -94,6 +122,12 @@ public class Parser {
             pos++; // consume INT
             final var intLit = (Token.Int) (tok);
             return new Expr.Int(intLit.n);
+        }
+        // IDENT
+        if (tok.kind() == Token.Kind.IDENT) {
+            pos++; // consume IDENT
+            final var ident = (Token.Ident) (tok);
+            return new Expr.Ident(ident.name);
         }
         // error!
         throw new RuntimeException("unknown token: " + tok);

@@ -73,10 +73,15 @@ public class Lexer {
         case DIVOP:
         case LPAREN:
         case RPAREN:
+        case EQ:
+        case LET:
+        case IN:
             return new Token.Fixed(kind);
         case INT:
             final int n = Integer.parseInt(str);
             return new Token.Int(n, str);
+        case IDENT:
+            return new Token.Ident(str);
         default:
             throw new RuntimeException("Unexpected value: " + kind);
         }

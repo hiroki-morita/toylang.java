@@ -11,12 +11,13 @@ public class Repl {
         final var reader = new BufferedReader(isr);
 
         String line = null;
+        Env env = new Env();
         while ((line = readLine(reader)) != null) {
             final var lexer = new Lexer(line);
             final var parser = new Parser(lexer);
             final var e = parser.parse();
             System.out.println(e);
-            System.out.println(e.eval());
+            System.out.println(e.eval(env));
         }
     }
 
