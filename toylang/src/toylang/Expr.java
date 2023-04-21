@@ -2,7 +2,7 @@ package toylang;
 
 public interface Expr {
 
-    int eval(Env env);
+    Value eval(Env env);
 
     @Override
     String toString();
@@ -15,8 +15,8 @@ public interface Expr {
         }
 
         @Override
-        public int eval(Env env) {
-            return n;
+        public Value eval(Env env) {
+            return new Value.Int(n);
         }
 
         @Override
@@ -27,15 +27,17 @@ public interface Expr {
 
     public class BinOp implements Expr {
         public enum Kind {
-            ADD("+"), // 加算
-            SUB("-"), // 減算
-            MUL("*"), // 乗算
-            DIV("/"); // 除算
+            ADD("+", Value.Op.ADD), // 加算
+            SUB("-", Value.Op.SUB), // 減算
+            MUL("*", Value.Op.MUL), // 乗算
+            DIV("/", Value.Op.DIV); // 除算
 
             final String text;
+            final Value.Op valOp;
 
-            private Kind(String text) {
+            private Kind(String text, Value.Op valOp) {
                 this.text = text;
+                this.valOp = valOp;
             }
         }
 
@@ -50,21 +52,10 @@ public interface Expr {
         }
 
         @Override
-        public int eval(Env env) {
+        public Value eval(Env env) {
             final var l = left.eval(env);
             final var r = right.eval(env);
-            switch (kind) {
-            case ADD:
-                return l + r;
-            case SUB:
-                return l - r;
-            case MUL:
-                return l * r;
-            case DIV:
-                return l / r;
-            default:
-                throw new RuntimeException("unreachable!");
-            }
+            return l.apply(kind.valOp, r);
         }
 
         @Override
@@ -91,8 +82,8 @@ public interface Expr {
         }
 
         @Override
-        public int eval(Env env) {
-            final int v = e.eval(env);
+        public Value eval(Env env) {
+            final var v = e.eval(env);
             env.add(ident, v);
             if (suc == null) {
                 return v;
@@ -104,9 +95,9 @@ public interface Expr {
         @Override
         public String toString() {
             if (suc == null) {
-                return String.format("[Let %s %s in %s]", ident, e, suc);
-            } else {
                 return String.format("[Let %s %s]", ident, e);
+            } else {
+                return String.format("[Let %s %s in %s]", ident, e, suc);
             }
         }
 
@@ -120,7 +111,7 @@ public interface Expr {
         }
 
         @Override
-        public int eval(Env env) {
+        public Value eval(Env env) {
             final var found = env.find(name);
             if (found == null) {
                 final var msg = String.format("ident '%s' not defined.", name);

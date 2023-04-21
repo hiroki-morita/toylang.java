@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Env {
-    private final Map<String, Integer> map;
+    private final Map<String, Value> map;
     private final Env outer;
 
     public Env() {
@@ -17,7 +17,7 @@ public class Env {
         this.outer = outer;
     }
 
-    public Integer find(String key) {
+    public Value find(String key) {
         final var found = map.get(key);
         if (found == null || outer != null) {
             return outer.find(key);
@@ -25,7 +25,7 @@ public class Env {
         return found;
     }
 
-    public void add(String key, int val) {
+    public void add(String key, Value val) {
         map.put(key, val);
     }
 }
