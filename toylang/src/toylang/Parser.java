@@ -51,10 +51,15 @@ public class Parser {
         return expr();
     }
 
-    private Token consume(Token.Kind exp) {
+    private Token consume(Token.Kind... exp) {
+        assert exp.length > 0;
+
         final var tok = toks.get(pos++);
-        if (tok.kind() != exp) {
-            final var msg = String.format("expects token '%s', but found '%s'", exp, tok);
+        if (!tok.kind().in(exp)) {
+            final var expected = Arrays.asList(exp).stream() //
+                                       .map(t -> t.toString()) //
+                                       .collect(Collectors.joining(","));
+            final var msg = String.format("expects token '%s', but found '%s'", expected, tok);
             throw new RuntimeException(msg);
         }
         return tok;
@@ -176,7 +181,7 @@ public class Parser {
         final var l = compareExpr();
         // CompareExpr (ANDAND|OROR) CompareExpr
         if (lookahead().in(Token.Kind.ANDAND, Token.Kind.OROR)) {
-            final var op = consume(Token.Kind.ANDAND);
+            final var op = consume(Token.Kind.ANDAND, Token.Kind.OROR);
             final var r = compareExpr();
             return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }
@@ -190,7 +195,7 @@ public class Parser {
         final var l = addSubExpr();
         // AddSubExpr (EQ|LT|GT) AddSubExpr
         if (lookahead().in(Token.Kind.EQ, Token.Kind.LT, Token.Kind.GT)) {
-            final var op = consume(Token.Kind.EQ);
+            final var op = consume(Token.Kind.EQ, Token.Kind.LT, Token.Kind.GT);
             final var r = addSubExpr();
             return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }
@@ -204,7 +209,7 @@ public class Parser {
         final var l = mulDivExpr();
         // MulDivExpr (ADDOP|SUBOP) MulDivExpr
         if (lookahead().in(Token.Kind.ADDOP, Token.Kind.SUBOP)) {
-            final var op = consume(Token.Kind.ADDOP);
+            final var op = consume(Token.Kind.ADDOP, Token.Kind.SUBOP);
             final var r = mulDivExpr();
             return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }
@@ -218,7 +223,7 @@ public class Parser {
         final var l = unaryExpr();
         // Primary (MULOP|DIVOP) Primary
         if (lookahead().in(Token.Kind.MULOP, Token.Kind.DIVOP)) {
-            final var op = consume(Token.Kind.MULOP);
+            final var op = consume(Token.Kind.MULOP, Token.Kind.DIVOP);
             final var r = unaryExpr();
             return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }
