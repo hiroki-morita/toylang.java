@@ -37,6 +37,19 @@ public interface Token {
             this.fixedText = fixedText;
             this.pattern = pattern;
         }
+
+        public boolean not(Kind k) {
+            return k != this;
+        }
+
+        public boolean in(Kind... ks) {
+            for (var k : ks) {
+                if (k == this) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     public class Fixed implements Token {

@@ -47,13 +47,61 @@ public class Parser {
         return expr();
     }
 
+    private Token consume(Token.Kind exp) {
+        final var tok = toks.get(pos++);
+        if (tok.kind() != exp) {
+            final var msg = String.format("expects token '%s', but found '%s'", exp, tok);
+            throw new RuntimeException(msg);
+        }
+        return tok;
+    }
+
+    private void consume(Token.Kind... expects) {
+        for (var exp : expects) {
+            final var tok = toks.get(pos++);
+            if (tok.kind() != exp) {
+                final var msg = String.format("expects token '%s', but found '%s'", exp, tok);
+                throw new RuntimeException(msg);
+            }
+        }
+    }
+
+    private Token.Kind lookahead() {
+        return toks.get(pos).kind();
+    }
+
+    private Expr.BinOp.Kind toBinOp(Token.Kind tokKind) {
+        switch (tokKind) {
+        case ADDOP:
+            return Expr.BinOp.Kind.ADD;
+        case SUBOP:
+            return Expr.BinOp.Kind.SUB;
+        case MULOP:
+            return Expr.BinOp.Kind.MUL;
+        case DIVOP:
+            return Expr.BinOp.Kind.DIV;
+        case EQ:
+            return Expr.BinOp.Kind.EQ;
+        case LT:
+            return Expr.BinOp.Kind.LT;
+        case GT:
+            return Expr.BinOp.Kind.GT;
+        case ANDAND:
+            return Expr.BinOp.Kind.AND;
+        case OROR:
+            return Expr.BinOp.Kind.OR;
+        default:
+            throw new IllegalArgumentException("Unexpected value: " + tokKind);
+        }
+    }
+
     private Expr expr() {
-        final var tok = toks.get(pos);
         // LetExpr
-        if (tok.kind() == Token.Kind.LET) {
+        if (lookahead().in(Token.Kind.LET)) {
             return letExpr();
         }
-        if (tok.kind() == Token.Kind.IF) {
+        // IfExpr
+        if (lookahead().in(Token.Kind.IF)) {
             return ifExpr();
         }
         // AndOrExpr
@@ -63,14 +111,13 @@ public class Parser {
     }
 
     private Expr letExpr() {
-        pos++; // consume LET
-        final var ident = (Token.Ident) (toks.get(pos++));
-        pos++; // consume EQ
+        consume(Token.Kind.LET);
+        final var ident = (Token.Ident) (consume(Token.Kind.IDENT));
+        consume(Token.Kind.EQ);
         final var e = expr();
-        var tok = toks.get(pos);
         // IN Expr
-        if (tok.kind() == Token.Kind.IN) {
-            pos++; // consume IN
+        if (lookahead().in(Token.Kind.IN)) {
+            consume(Token.Kind.IN);
             final var suc = expr();
             return new Expr.Let(ident.name, e, suc);
         }
@@ -81,37 +128,29 @@ public class Parser {
     }
 
     private Expr ifExpr() {
-        pos++; // consume IF
+        consume(Token.Kind.IF);
         final var cond = expr();
-        pos++; // consume THEN
-        final var thenExpr = expr();
-        final var els = toks.get(pos);
+        consume(Token.Kind.THEN);
+        final var then = expr();
         // ELSE Expr
-        if (els.kind() == Token.Kind.ELSE) {
-            pos++; // consume ELSE
-            final var elsExpr = expr();
-            return new Expr.If(cond, thenExpr, elsExpr);
+        if (lookahead().in(Token.Kind.ELSE)) {
+            consume(Token.Kind.ELSE);
+            final var els = expr();
+            return new Expr.If(cond, then, els);
         }
         // else
         else {
-            return new Expr.If(cond, thenExpr, null);
+            return new Expr.If(cond, then, null);
         }
     }
 
     private Expr andOrExpr() {
         final var l = compareExpr();
-        var tok = toks.get(pos);
-        // CompareExpr ANDAND CompareExpr
-        if (tok.kind() == Token.Kind.ANDAND) {
-            pos++; // consume ANDAND
+        // CompareExpr (ANDAND|OROR) CompareExpr
+        if (lookahead().in(Token.Kind.ANDAND, Token.Kind.OROR)) {
+            final var op = consume(Token.Kind.ANDAND);
             final var r = compareExpr();
-            return new Expr.BinOp(Expr.BinOp.Kind.AND, l, r);
-        }
-        // CompareExpr ANDAND CompareExpr
-        if (tok.kind() == Token.Kind.OROR) {
-            pos++; // consume OROR
-            final var r = compareExpr();
-            return new Expr.BinOp(Expr.BinOp.Kind.OR, l, r);
+            return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }
         // CompareExpr
         else {
@@ -121,24 +160,11 @@ public class Parser {
 
     private Expr compareExpr() {
         final var l = addSubExpr();
-        var tok = toks.get(pos);
-        // AddSubExpr EQ AddSubExpr
-        if (tok.kind() == Token.Kind.EQ) {
-            pos++; // consume EQ
+        // AddSubExpr (EQ|LT|GT) AddSubExpr
+        if (lookahead().in(Token.Kind.EQ, Token.Kind.LT, Token.Kind.GT)) {
+            final var op = consume(Token.Kind.EQ);
             final var r = addSubExpr();
-            return new Expr.BinOp(Expr.BinOp.Kind.EQ, l, r);
-        }
-        // AddSubExpr LT AddSubExpr
-        if (tok.kind() == Token.Kind.LT) {
-            pos++; // consume LT
-            final var r = addSubExpr();
-            return new Expr.BinOp(Expr.BinOp.Kind.LT, l, r);
-        }
-        // AddSubExpr GT AddSubExpr
-        if (tok.kind() == Token.Kind.GT) {
-            pos++; // consume GT
-            final var r = addSubExpr();
-            return new Expr.BinOp(Expr.BinOp.Kind.GT, l, r);
+            return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }
         // AddSubExpr
         else {
@@ -148,18 +174,11 @@ public class Parser {
 
     private Expr addSubExpr() {
         final var l = mulDivExpr();
-        var tok = toks.get(pos);
-        // MulDivExpr ADDOP MulDivExpr
-        if (tok.kind() == Token.Kind.ADDOP) {
-            pos++; // consume ADDOP
+        // MulDivExpr (ADDOP|SUBOP) MulDivExpr
+        if (lookahead().in(Token.Kind.ADDOP, Token.Kind.SUBOP)) {
+            final var op = consume(Token.Kind.ADDOP);
             final var r = mulDivExpr();
-            return new Expr.BinOp(Expr.BinOp.Kind.ADD, l, r);
-        }
-        // MulDivExpr SUBOP MulDivExpr
-        if (tok.kind() == Token.Kind.SUBOP) {
-            pos++; // consume ADDOP
-            final var r = mulDivExpr();
-            return new Expr.BinOp(Expr.BinOp.Kind.SUB, l, r);
+            return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }
         // MulDivExpr
         else {
@@ -169,18 +188,11 @@ public class Parser {
 
     private Expr mulDivExpr() {
         final var l = unaryExpr();
-        var tok = toks.get(pos);
-        // Primary MULOP Primary
-        if (tok.kind() == Token.Kind.MULOP) {
-            pos++; // consume MULOP
+        // Primary (MULOP|DIVOP) Primary
+        if (lookahead().in(Token.Kind.MULOP, Token.Kind.DIVOP)) {
+            final var op = consume(Token.Kind.MULOP);
             final var r = unaryExpr();
-            return new Expr.BinOp(Expr.BinOp.Kind.MUL, l, r);
-        }
-        // Primary DIVOP Primary
-        if (tok.kind() == Token.Kind.DIVOP) {
-            pos++; // consume DIVOP
-            final var r = unaryExpr();
-            return new Expr.BinOp(Expr.BinOp.Kind.DIV, l, r);
+            return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }
         // Primary
         else {
@@ -189,10 +201,9 @@ public class Parser {
     }
 
     private Expr unaryExpr() {
-        var tok = toks.get(pos);
         // NOT Expr
-        if (tok.kind() == Token.Kind.NOT) {
-            pos++; // consume NOT
+        if (lookahead().in(Token.Kind.NOT)) {
+            consume(Token.Kind.NOT);
             final var e = primary();
             return new Expr.UnaryOp(Expr.UnaryOp.Kind.NOT, e);
         }
@@ -203,47 +214,43 @@ public class Parser {
     }
 
     private Expr primary() {
-        var tok = toks.get(pos);
         // LPAREN
-        if (tok.kind() == Token.Kind.LPAREN) {
-            final var rParen = toks.get(pos + 1);
+        if (lookahead().in(Token.Kind.LPAREN)) {
+            consume(Token.Kind.LPAREN);
+            Expr e = null;
             // Unit
-            if (rParen.kind() == Token.Kind.RPAREN) {
-                pos += 2; // consume LPAREN RPAREN
-                return new Expr.Unit();
+            if (lookahead().in(Token.Kind.RPAREN)) {
+                e = new Expr.Unit();
             }
             // Expr RPAREN
             else {
-                pos++; // consume LPAREN
-                final var e = expr();
-                pos++; // consume RPAREN
-                return e;
+                e = expr();
             }
+            consume(Token.Kind.RPAREN);
+            return e;
         }
         // INT
-        if (tok.kind() == Token.Kind.INT) {
-            pos++; // consume INT
-            final var intLit = (Token.Int) (tok);
-            return new Expr.Int(intLit.n);
+        if (lookahead().in(Token.Kind.INT)) {
+            final var lit = (Token.Int) (consume(Token.Kind.INT));
+            return new Expr.Int(lit.n);
         }
         // IDENT
-        if (tok.kind() == Token.Kind.IDENT) {
-            pos++; // consume IDENT
-            final var ident = (Token.Ident) (tok);
+        if (lookahead().in(Token.Kind.IDENT)) {
+            final var ident = (Token.Ident) (consume(Token.Kind.IDENT));
             return new Expr.Ident(ident.name);
         }
         // TRUE
-        if (tok.kind() == Token.Kind.TRUE) {
-            pos++; // consume TRUE
+        if (lookahead().in(Token.Kind.TRUE)) {
+            consume(Token.Kind.TRUE);
             return new Expr.Bool(true);
         }
         // FALSE
-        if (tok.kind() == Token.Kind.FALSE) {
-            pos++; // consume FALSE
+        if (lookahead().in(Token.Kind.FALSE)) {
+            consume(Token.Kind.FALSE);
             return new Expr.Bool(false);
         }
         // error!
-        throw new RuntimeException("unknown token: " + tok);
+        throw new RuntimeException("unknown token: " + lookahead());
     }
 
 }

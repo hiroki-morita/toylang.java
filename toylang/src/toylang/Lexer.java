@@ -17,9 +17,9 @@ public class Lexer {
 
     public Lexer(String text) {
         this.text = text;
-        this.patterns = Arrays.stream(Token.Kind.values())
-                              .filter(k -> k != Token.Kind.EOF)
-                              .map(k -> Pattern.compile("^" + k.pattern))
+        this.patterns = Arrays.stream(Token.Kind.values()) //
+                              .filter(k -> k != Token.Kind.EOF) //
+                              .map(k -> Pattern.compile("^" + k.pattern)) //
                               .collect(Collectors.toList());
         this.pos = 0;
     }
@@ -31,8 +31,7 @@ public class Lexer {
         }
 
         final var tok = tokenize();
-        pos += tok.text()
-                  .length();
+        pos += tok.text().length();
         return tok;
     }
 
