@@ -220,8 +220,8 @@ public interface Expr {
 
         @Override
         public Value eval(Env env) {
-            // TODO: env をディープコピーしないと多分バグる？
-            return new Value.Closure(arg, e, env);
+            // TODO: env を deepcopy しないとバグる？（shallow copy は必須）
+            return new Value.Closure(arg, e, env.copy());
         }
 
         @Override

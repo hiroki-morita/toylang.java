@@ -40,6 +40,10 @@ public class Env {
         return new Env(m, this);
     }
 
+    public Env copy() {
+        return new Env(new HashMap<>(map), outer);
+    }
+
     @Override
     public String toString() {
         final var otr = outer == null ? "{}" : outer.toString();
