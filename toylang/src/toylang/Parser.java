@@ -8,9 +8,11 @@ import java.util.List;
  * 
  * ## 文法
  * 
- * Expr -> LetExpr | AddSubExpr
+ * Expr -> LetExpr | IfExpr | AddSubExpr
  * 
  * LetExpr -> LET IDENT EQ Expr (IN Expr)?
+ * 
+ * IfExpr -> IF Expr THEN Expr (ELSE Expr)?
  * 
  * AndOrExpr -> CompareExpr ((ANDAND|OROR) CompareExpr)?
  * CompareExpr -> AddSubExpr ((EQ|LT|GT) AddSubExpr)?
@@ -51,6 +53,9 @@ public class Parser {
         if (tok.kind() == Token.Kind.LET) {
             return letExpr();
         }
+        if (tok.kind() == Token.Kind.IF) {
+            return ifExpr();
+        }
         // AndOrExpr
         else {
             return andOrExpr();
@@ -72,6 +77,24 @@ public class Parser {
         // (else)
         else {
             return new Expr.Let(ident.name, e);
+        }
+    }
+
+    private Expr ifExpr() {
+        pos++; // consume IF
+        final var cond = expr();
+        pos++; // consume THEN
+        final var thenExpr = expr();
+        final var els = toks.get(pos);
+        // ELSE Expr
+        if (els.kind() == Token.Kind.ELSE) {
+            pos++; // consume ELSE
+            final var elsExpr = expr();
+            return new Expr.If(cond, thenExpr, elsExpr);
+        }
+        // else
+        else {
+            return new Expr.If(cond, thenExpr, null);
         }
     }
 

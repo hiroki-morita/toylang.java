@@ -170,6 +170,45 @@ public interface Expr {
         }
     }
 
+    public class If implements Expr {
+        final Expr cond;
+        final Expr then;
+        final Expr els;
+
+        public If(Expr cond, Expr then, Expr els) {
+            this.cond = cond;
+            this.then = then;
+            this.els = els;
+        }
+
+        @Override
+        public Value eval(Env env) {
+            final var condVal = cond.eval(env);
+            if (!(condVal instanceof Value.Bool)) {
+                final var msg = String.format("if cond must be Bool, but found '%s'.", condVal);
+                throw new RuntimeException(msg);
+            }
+
+            final boolean c = ((Value.Bool) condVal).b;
+            if (c) {
+                return then.eval(env);
+            } else if (els == null) {
+                return Value.Unit.get();
+            } else {
+                return els.eval(env);
+            }
+        }
+
+        @Override
+        public String toString() {
+            if (els == null) {
+                return String.format("[If %s %s]", cond, then);
+            } else {
+                return String.format("[If %s %s %s]", cond, then, els);
+            }
+        }
+    }
+
     public class Ident implements Expr {
         final String name;
 

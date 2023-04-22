@@ -21,6 +21,9 @@ public interface Token {
         NOT("not", "not"), // "not"
         LET("let", "let"), // "let"
         IN("in", "in"), // "in"
+        IF("if", "if"), // "if"
+        THEN("then", "then"), // "then"
+        ELSE("else", "else"), // "else"
         TRUE("true", "true"), // "true"
         FALSE("false", "false"), // "false"
         INT(null, "-?(0|[1-9][0-9]*)"), // 整数リテラル

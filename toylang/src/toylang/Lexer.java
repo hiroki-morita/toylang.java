@@ -81,6 +81,9 @@ public class Lexer {
         case NOT:
         case LET:
         case IN:
+        case IF:
+        case THEN:
+        case ELSE:
         case TRUE:
         case FALSE:
             return new Token.Fixed(kind);
