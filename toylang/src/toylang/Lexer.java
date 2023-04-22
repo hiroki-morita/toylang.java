@@ -22,6 +22,7 @@ public class Lexer {
                               .map(k -> Pattern.compile("^" + k.pattern)) //
                               .collect(Collectors.toList());
         this.pos = 0;
+
     }
 
     public Token next() {
@@ -77,12 +78,15 @@ public class Lexer {
         case GT:
         case ANDAND:
         case OROR:
+        case ARROW:
+        case COMMA:
         case NOT:
         case LET:
         case IN:
         case IF:
         case THEN:
         case ELSE:
+        case FN:
         case TRUE:
         case FALSE:
             return new Token.Fixed(kind);

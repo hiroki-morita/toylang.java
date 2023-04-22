@@ -1,6 +1,8 @@
 package toylang;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -8,11 +10,13 @@ import java.util.List;
  * 
  * ## 文法
  * 
- * Expr -> LetExpr | IfExpr | AddSubExpr
+ * Expr -> LetExpr | IfExpr | FnExpr | AndOrExpr
  * 
  * LetExpr -> LET IDENT EQ Expr (IN Expr)?
  * 
  * IfExpr -> IF Expr THEN Expr (ELSE Expr)?
+ * 
+ * FnExpr -> FN LPAREN (IDENT (COMMA IDENT)*)? RPAREN ARROW Expr
  * 
  * AndOrExpr -> CompareExpr ((ANDAND|OROR) CompareExpr)?
  * CompareExpr -> AddSubExpr ((EQ|LT|GT) AddSubExpr)?
@@ -56,16 +60,6 @@ public class Parser {
         return tok;
     }
 
-    private void consume(Token.Kind... expects) {
-        for (var exp : expects) {
-            final var tok = toks.get(pos++);
-            if (tok.kind() != exp) {
-                final var msg = String.format("expects token '%s', but found '%s'", exp, tok);
-                throw new RuntimeException(msg);
-            }
-        }
-    }
-
     private Token.Kind lookahead() {
         return toks.get(pos).kind();
     }
@@ -103,6 +97,9 @@ public class Parser {
         // IfExpr
         if (lookahead().in(Token.Kind.IF)) {
             return ifExpr();
+        }
+        if (lookahead().in(Token.Kind.FN)) {
+            return fnExpr();
         }
         // AndOrExpr
         else {
@@ -142,6 +139,37 @@ public class Parser {
         else {
             return new Expr.If(cond, then, null);
         }
+    }
+
+    private Expr fnExpr() {
+        final var args = new LinkedList<String>();
+
+        consume(Token.Kind.FN);
+        consume(Token.Kind.LPAREN);
+        if (lookahead().in(Token.Kind.IDENT)) {
+            var ident = (Token.Ident) consume(Token.Kind.IDENT);
+            args.add(ident.name);
+            while (lookahead().not(Token.Kind.RPAREN)) {
+                consume(Token.Kind.COMMA);
+                ident = (Token.Ident) consume(Token.Kind.IDENT);
+                args.add(ident.name);
+            }
+        }
+        consume(Token.Kind.RPAREN);
+        consume(Token.Kind.ARROW);
+        final var e = expr();
+
+        // nullary
+        if (args.size() == 0) {
+            return new Expr.Func(null, e);
+        }
+        // more than 0 args - currying
+        Collections.reverse(args);
+        var fn = new Expr.Func(args.pop(), e);
+        while (!args.isEmpty()) {
+            fn = new Expr.Func(args.pop(), fn);
+        }
+        return fn;
     }
 
     private Expr andOrExpr() {

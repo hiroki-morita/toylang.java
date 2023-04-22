@@ -12,6 +12,7 @@ public interface Value {
         GT, // >
         AND, // &&
         OR, // ||
+        APPLY, // （関数適用）
     }
 
     public enum UnaryOp {
@@ -148,6 +149,44 @@ public interface Value {
         @Override
         public String toString() {
             return Boolean.toString(b);
+        }
+    }
+
+    public class Closure implements Value {
+        final String arg;
+        final Expr expr;
+        final Env env;
+
+        public Closure(String arg, Expr expr, Env env) {
+            this.arg = arg;
+            this.expr = expr;
+            this.env = env;
+        }
+
+        @Override
+        public Value applyBinOp(BinOp op, Value other) {
+            switch (op) {
+            case APPLY:
+                final var param = other; // 実引数
+                return expr.eval(env.with(arg, param));
+            default:
+                final var msg = String.format("cannot '%s' %s %s.", op, this, other);
+                throw new RuntimeException(msg);
+            }
+        }
+
+        @Override
+        public Value applyUnaryOp(UnaryOp op) {
+            switch (op) {
+            default:
+                final var msg = String.format("cannot '%s' %s.", op, this);
+                throw new RuntimeException(msg);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return String.format("[Clos (%s) => %s, %s]", arg, expr, env);
         }
     }
 

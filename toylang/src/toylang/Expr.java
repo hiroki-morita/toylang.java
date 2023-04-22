@@ -209,6 +209,27 @@ public interface Expr {
         }
     }
 
+    public class Func implements Expr {
+        final String arg;
+        final Expr e;
+
+        public Func(String arg, Expr e) {
+            this.arg = arg;
+            this.e = e;
+        }
+
+        @Override
+        public Value eval(Env env) {
+            // TODO: env をディープコピーしないと多分バグる？
+            return new Value.Closure(arg, e, env);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("[Fn (%s) => %s]", arg, e);
+        }
+    }
+
     public class Ident implements Expr {
         final String name;
 
