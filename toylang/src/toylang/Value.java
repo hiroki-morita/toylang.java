@@ -2,7 +2,7 @@ package toylang;
 
 public interface Value {
 
-    public enum Op {
+    public enum BinOp {
         ADD, // +
         SUB, // -
         MUL, // *
@@ -14,7 +14,13 @@ public interface Value {
         OR, // ||
     }
 
-    Value apply(Op op, Value other);
+    public enum UnaryOp {
+        NOT, // not
+    }
+
+    Value applyBinOp(BinOp op, Value other);
+
+    Value applyUnaryOp(UnaryOp op);
 
     @Override
     String toString();
@@ -27,7 +33,7 @@ public interface Value {
         }
 
         @Override
-        public Value apply(Op op, Value other) {
+        public Value applyBinOp(BinOp op, Value other) {
             if (!(other instanceof Int)) {
                 final var msg = String.format("cannot '%s' %s %s.", op, this, other);
                 throw new RuntimeException(msg);
@@ -56,6 +62,16 @@ public interface Value {
         }
 
         @Override
+        public Value applyUnaryOp(UnaryOp op) {
+            switch (op) {
+            // no operators can be applied to Int
+            default:
+                final var msg = String.format("cannot '%s' %s.", op, this);
+                throw new RuntimeException(msg);
+            }
+        }
+
+        @Override
         public String toString() {
             return Integer.toString(n);
         }
@@ -69,7 +85,7 @@ public interface Value {
         }
 
         @Override
-        public Value apply(Op op, Value other) {
+        public Value applyBinOp(BinOp op, Value other) {
             if (!(other instanceof Bool)) {
                 final var msg = String.format("cannot '%s' %s %s.", op, this, other);
                 throw new RuntimeException(msg);
@@ -85,6 +101,18 @@ public interface Value {
                 return new Bool(b || o.b);
             default:
                 final var msg = String.format("cannot '%s' %s %s.", op, this, other);
+                throw new RuntimeException(msg);
+            }
+        }
+
+        @Override
+        public Value applyUnaryOp(UnaryOp op) {
+            switch (op) {
+            case NOT: {
+                return new Value.Bool(!b);
+            }
+            default:
+                final var msg = String.format("cannot '%s' %s.", op, this);
                 throw new RuntimeException(msg);
             }
         }

@@ -78,6 +78,7 @@ public class Lexer {
         case GT:
         case ANDAND:
         case OROR:
+        case NOT:
         case LET:
         case IN:
         case TRUE:

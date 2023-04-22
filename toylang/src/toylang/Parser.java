@@ -15,7 +15,9 @@ import java.util.List;
  * AndOrExpr -> CompareExpr ((ANDAND|OROR) CompareExpr)?
  * CompareExpr -> AddSubExpr ((EQ|LT|GT) AddSubExpr)?
  * AddSubExpr -> MulDivExpr ((ADDOP|SUBOP) MulDivExpr)?
- * MulDivExpr -> Primary ((MULOP|DIVOP) Primary)?
+ * MulDivExpr -> unaryExpr ((MULOP|DIVOP) unaryExpr)?
+ * UnaryExpr -> (NOT)? Primary
+ * 
  * Primary -> LPAREN Expr RPAREN | INT | IDENT | TRUE | FALSE
  */
 public class Parser {
@@ -138,23 +140,37 @@ public class Parser {
     }
 
     private Expr mulDivExpr() {
-        final var l = primary();
+        final var l = unaryExpr();
         var tok = toks.get(pos);
         // Primary MULOP Primary
         if (tok.kind() == Token.Kind.MULOP) {
             pos++; // consume MULOP
-            final var r = primary();
+            final var r = unaryExpr();
             return new Expr.BinOp(Expr.BinOp.Kind.MUL, l, r);
         }
         // Primary DIVOP Primary
         if (tok.kind() == Token.Kind.DIVOP) {
             pos++; // consume DIVOP
-            final var r = primary();
+            final var r = unaryExpr();
             return new Expr.BinOp(Expr.BinOp.Kind.DIV, l, r);
         }
         // Primary
         else {
             return l;
+        }
+    }
+
+    private Expr unaryExpr() {
+        var tok = toks.get(pos);
+        // NOT Expr
+        if (tok.kind() == Token.Kind.NOT) {
+            pos++; // consume NOT
+            final var e = primary();
+            return new Expr.UnaryOp(Expr.UnaryOp.Kind.NOT, e);
+        }
+        // Expr
+        else {
+            return primary();
         }
     }
 

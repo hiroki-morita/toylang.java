@@ -18,6 +18,7 @@ public interface Token {
         GT(">", ">"), // ">"
         ANDAND("&&", "&&"), // "&&"
         OROR("||", "\\|\\|"), // "||"
+        NOT("not", "not"), // "not"
         LET("let", "let"), // "let"
         IN("in", "in"), // "in"
         TRUE("true", "true"), // "true"

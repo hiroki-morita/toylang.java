@@ -45,20 +45,20 @@ public interface Expr {
 
     public class BinOp implements Expr {
         public enum Kind {
-            ADD("+", Value.Op.ADD), // 加算
-            SUB("-", Value.Op.SUB), // 減算
-            MUL("*", Value.Op.MUL), // 乗算
-            DIV("/", Value.Op.DIV), // 除算
-            EQ("=", Value.Op.EQ), // 比較（等価）
-            LT("<", Value.Op.LT), // 比較（小なり）
-            GT(">", Value.Op.GT), // 比較（大なり）
-            AND("&&", Value.Op.AND), // 論理積
-            OR("||", Value.Op.OR); // 論理和
+            ADD("+", Value.BinOp.ADD), // 加算
+            SUB("-", Value.BinOp.SUB), // 減算
+            MUL("*", Value.BinOp.MUL), // 乗算
+            DIV("/", Value.BinOp.DIV), // 除算
+            EQ("=", Value.BinOp.EQ), // 比較（等価）
+            LT("<", Value.BinOp.LT), // 比較（小なり）
+            GT(">", Value.BinOp.GT), // 比較（大なり）
+            AND("&&", Value.BinOp.AND), // 論理積
+            OR("||", Value.BinOp.OR); // 論理和
 
             final String text;
-            final Value.Op valOp;
+            final Value.BinOp valOp;
 
-            private Kind(String text, Value.Op valOp) {
+            private Kind(String text, Value.BinOp valOp) {
                 this.text = text;
                 this.valOp = valOp;
             }
@@ -78,12 +78,45 @@ public interface Expr {
         public Value eval(Env env) {
             final var l = left.eval(env);
             final var r = right.eval(env);
-            return l.apply(kind.valOp, r);
+            return l.applyBinOp(kind.valOp, r);
         }
 
         @Override
         public String toString() {
             return String.format("[%s %s %s]", kind.text, left, right);
+        }
+    }
+
+    public class UnaryOp implements Expr {
+        public enum Kind {
+            NOT("not", Value.UnaryOp.NOT); // 論理否定
+
+            final String text;
+            final Value.UnaryOp valOp;
+
+            private Kind(String text, Value.UnaryOp valOp) {
+                this.text = text;
+                this.valOp = valOp;
+            }
+        }
+
+        final Kind kind;
+        final Expr e;
+
+        public UnaryOp(Kind kind, Expr e) {
+            this.kind = kind;
+            this.e = e;
+        }
+
+        @Override
+        public Value eval(Env env) {
+            final var v = e.eval(env);
+            return v.applyUnaryOp(kind.valOp);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("[%s %s]", kind.text, e);
         }
     }
 
