@@ -18,7 +18,12 @@ import java.util.List;
  * MulDivExpr -> unaryExpr ((MULOP|DIVOP) unaryExpr)?
  * UnaryExpr -> (NOT)? Primary
  * 
- * Primary -> LPAREN Expr RPAREN | INT | IDENT | TRUE | FALSE
+ * Primary -> LPAREN Expr RPAREN
+ *          | LPAREN RPAREN (=> Unit) 
+ *          | INT
+ *          | IDENT
+ *          | TRUE
+ *          | FALSE
  */
 public class Parser {
     private final List<Token> toks;
@@ -176,12 +181,21 @@ public class Parser {
 
     private Expr primary() {
         var tok = toks.get(pos);
-        // LPAREN Expr RPAREN
+        // LPAREN
         if (tok.kind() == Token.Kind.LPAREN) {
-            pos++; // consume LPAREN
-            final var e = expr();
-            pos++; // consume RPAREN
-            return e;
+            final var rParen = toks.get(pos + 1);
+            // Unit
+            if (rParen.kind() == Token.Kind.RPAREN) {
+                pos += 2; // consume LPAREN RPAREN
+                return new Expr.Unit();
+            }
+            // Expr RPAREN
+            else {
+                pos++; // consume LPAREN
+                final var e = expr();
+                pos++; // consume RPAREN
+                return e;
+            }
         }
         // INT
         if (tok.kind() == Token.Kind.INT) {

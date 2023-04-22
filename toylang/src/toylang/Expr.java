@@ -7,6 +7,18 @@ public interface Expr {
     @Override
     String toString();
 
+    public class Unit implements Expr {
+        @Override
+        public Value eval(Env env) {
+            return Value.Unit.get();
+        }
+
+        @Override
+        public String toString() {
+            return "[Unit]";
+        }
+    }
+
     public class Int implements Expr {
         final int n;
 
@@ -156,7 +168,6 @@ public interface Expr {
                 return String.format("[Let %s %s in %s]", ident, e, suc);
             }
         }
-
     }
 
     public class Ident implements Expr {

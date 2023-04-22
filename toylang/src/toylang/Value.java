@@ -25,6 +25,34 @@ public interface Value {
     @Override
     String toString();
 
+    public class Unit implements Value {
+        private static Unit SINGLETON = new Unit();
+
+        private Unit() {
+        }
+
+        public static Unit get() {
+            return SINGLETON;
+        }
+
+        @Override
+        public Value applyBinOp(BinOp op, Value other) {
+            final var msg = String.format("cannot '%s' %s %s.", op, this, other);
+            throw new RuntimeException(msg);
+        }
+
+        @Override
+        public Value applyUnaryOp(UnaryOp op) {
+            final var msg = String.format("cannot '%s' %s.", op, this);
+            throw new RuntimeException(msg);
+        }
+
+        @Override
+        public String toString() {
+            return "()";
+        }
+    }
+
     public class Int implements Value {
         final int n;
 
