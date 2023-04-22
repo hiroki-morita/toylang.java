@@ -55,6 +55,30 @@ public interface Expr {
         }
     }
 
+    public class Ident implements Expr {
+        final String name;
+
+        public Ident(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public Value eval(Env env) {
+            final var found = env.find(name);
+            if (found == null) {
+                final var msg = String.format("ident '%s' not defined.", name);
+                throw new RuntimeException(msg);
+            }
+            return found;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("[Ident %s]", name);
+        }
+
+    }
+
     public class BinOp implements Expr {
         public enum Kind {
             ADD("+", Value.BinOp.ADD), // 加算
@@ -230,28 +254,31 @@ public interface Expr {
         }
     }
 
-    public class Ident implements Expr {
-        final String name;
+    public class Apply implements Expr {
+        final Expr fn;
+        final Expr param;
 
-        public Ident(String name) {
-            this.name = name;
+        public Apply(Expr fn, Expr param) {
+            this.fn = fn;
+            this.param = param;
+            assert this.param != null : "param must not be null; use Unit.";
         }
 
         @Override
         public Value eval(Env env) {
-            final var found = env.find(name);
-            if (found == null) {
-                final var msg = String.format("ident '%s' not defined.", name);
+            final var fnVal = fn.eval(env);
+            if (!(fnVal instanceof Value.Callable)) {
+                final var msg = String.format("apply failed: '%s' is not a function.", fnVal);
                 throw new RuntimeException(msg);
             }
-            return found;
+            final var callable = (Value.Callable) (fnVal);
+            return callable.call(param.eval(env));
         }
 
         @Override
         public String toString() {
-            return String.format("[Ident %s]", name);
+            return String.format("[apply %s %s]", fn, param);
         }
-
     }
 
 }

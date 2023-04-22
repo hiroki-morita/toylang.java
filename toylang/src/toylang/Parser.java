@@ -1,9 +1,11 @@
 package toylang;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 式の再帰下降パーサ
@@ -22,12 +24,16 @@ import java.util.List;
  * CompareExpr -> AddSubExpr ((EQ|LT|GT) AddSubExpr)?
  * AddSubExpr -> MulDivExpr ((ADDOP|SUBOP) MulDivExpr)?
  * MulDivExpr -> unaryExpr ((MULOP|DIVOP) unaryExpr)?
- * UnaryExpr -> (NOT)? Primary
+ * UnaryExpr -> (NOT)? Apply
+ * 
+ * Apply -> Primary (ApplyParams)?
+ * ApplyParams -> LPAREN (Expr (COMMA Expr)*)? RPAREN
  * 
  * Primary -> LPAREN Expr RPAREN
- *          | LPAREN RPAREN (=> Unit) 
- *          | INT
+ *          | LPAREN RPAREN (=> Unit)
+ *          | Apply
  *          | IDENT
+ *          | INT
  *          | TRUE
  *          | FALSE
  */
@@ -66,7 +72,11 @@ public class Parser {
     }
 
     private Token.Kind lookahead() {
-        return toks.get(pos).kind();
+        return lookahead(0);
+    }
+
+    private Token.Kind lookahead(int k) {
+        return toks.get(pos + k).kind();
     }
 
     private Expr.BinOp.Kind toBinOp(Token.Kind tokKind) {
@@ -103,6 +113,7 @@ public class Parser {
         if (lookahead().in(Token.Kind.IF)) {
             return ifExpr();
         }
+        // FnExpr
         if (lookahead().in(Token.Kind.FN)) {
             return fnExpr();
         }
@@ -237,13 +248,54 @@ public class Parser {
         // NOT Expr
         if (lookahead().in(Token.Kind.NOT)) {
             consume(Token.Kind.NOT);
-            final var e = primary();
+            final var e = apply();
             return new Expr.UnaryOp(Expr.UnaryOp.Kind.NOT, e);
         }
         // Expr
         else {
-            return primary();
+            return apply();
         }
+    }
+
+    private Expr apply() {
+        final var prim = primary();
+        // Primary Params (=> Apply)
+        if (lookahead().in(Token.Kind.LPAREN)) {
+            final var params = applyParams();
+            // nullary (apply unit)
+            if (params.isEmpty()) {
+                return new Expr.Apply(prim, new Expr.Unit());
+            }
+            // 関数はカリー化しているので順に apply していく
+            var app = new Expr.Apply(prim, params.pop());
+            while (!params.isEmpty()) {
+                app = new Expr.Apply(app, params.pop());
+            }
+            return app;
+        }
+        // Primary
+        else {
+            return prim;
+        }
+    }
+
+    private LinkedList<Expr> applyParams() {
+        final var params = new LinkedList<Expr>();
+
+        consume(Token.Kind.LPAREN);
+        if (lookahead().not(Token.Kind.RPAREN)) {
+            Expr param = expr();
+            params.add(param);
+            while (lookahead().not(Token.Kind.RPAREN)) {
+                consume(Token.Kind.COMMA);
+                param = expr();
+                params.add(param);
+
+            }
+        }
+        consume(Token.Kind.RPAREN);
+
+        return params;
     }
 
     private Expr primary() {

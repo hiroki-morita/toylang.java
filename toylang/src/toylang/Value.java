@@ -12,7 +12,6 @@ public interface Value {
         GT, // >
         AND, // &&
         OR, // ||
-        APPLY, // （関数適用）
     }
 
     public enum UnaryOp {
@@ -22,6 +21,16 @@ public interface Value {
     Value applyBinOp(BinOp op, Value other);
 
     Value applyUnaryOp(UnaryOp op);
+
+    /**
+     * 関数適用が可能な値（クロージャ）
+     *
+     * ふつう関数適用は "apply" だが演算子の適用にも使っているので
+     * "call" を使う
+     */
+    public interface Callable extends Value {
+        Value call(Value param);
+    }
 
     @Override
     String toString();
@@ -152,23 +161,20 @@ public interface Value {
         }
     }
 
-    public class Closure implements Value {
+    public class Closure implements Value, Callable {
         final String arg;
-        final Expr expr;
+        final Expr fn;
         final Env env;
 
-        public Closure(String arg, Expr expr, Env env) {
+        public Closure(String arg, Expr fn, Env env) {
             this.arg = arg;
-            this.expr = expr;
+            this.fn = fn;
             this.env = env;
         }
 
         @Override
         public Value applyBinOp(BinOp op, Value other) {
             switch (op) {
-            case APPLY:
-                final var param = other; // 実引数
-                return expr.eval(env.with(arg, param));
             default:
                 final var msg = String.format("cannot '%s' %s %s.", op, this, other);
                 throw new RuntimeException(msg);
@@ -185,8 +191,17 @@ public interface Value {
         }
 
         @Override
+        public Value call(Value param) {
+            if (arg == null) { // nullary
+                return fn.eval(new Env(env));
+            } else {
+                return fn.eval(env.with(arg, param));
+            }
+        }
+
+        @Override
         public String toString() {
-            return String.format("[Clos (%s) => %s, %s]", arg, expr, env);
+            return String.format("[Clos (%s) => %s, %s]", arg, fn, env);
         }
     }
 
