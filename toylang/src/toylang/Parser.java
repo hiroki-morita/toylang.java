@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * 
  * IfExpr -> IF Expr THEN Expr (ELSE Expr)?
  * 
- * FnExpr -> FN LPAREN (IDENT (COMMA IDENT)*)? RPAREN ARROW Expr
+ * FnExpr -> VBAR (IDENT (COMMA IDENT)*)? VBAR ARROW Expr
  * 
  * AndOrExpr -> CompareExpr ((ANDAND|OROR) CompareExpr)?
  * CompareExpr -> AddSubExpr ((EQ|LT|GT) AddSubExpr)?
@@ -114,7 +114,7 @@ public class Parser {
             return ifExpr();
         }
         // FnExpr
-        if (lookahead().in(Token.Kind.FN)) {
+        if (lookahead().in(Token.Kind.VBAR)) {
             return fnExpr();
         }
         // AndOrExpr
@@ -160,18 +160,17 @@ public class Parser {
     private Expr fnExpr() {
         final var args = new LinkedList<String>();
 
-        consume(Token.Kind.FN);
-        consume(Token.Kind.LPAREN);
+        consume(Token.Kind.VBAR);
         if (lookahead().in(Token.Kind.IDENT)) {
             var ident = (Token.Ident) consume(Token.Kind.IDENT);
             args.add(ident.name);
-            while (lookahead().not(Token.Kind.RPAREN)) {
+            while (lookahead().not(Token.Kind.VBAR)) {
                 consume(Token.Kind.COMMA);
                 ident = (Token.Ident) consume(Token.Kind.IDENT);
                 args.add(ident.name);
             }
         }
-        consume(Token.Kind.RPAREN);
+        consume(Token.Kind.VBAR);
         consume(Token.Kind.ARROW);
         final var e = expr();
 

@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 public class Lexer {
 
-    // ! 空白のパターン（読み飛ばす ）
+    // ! 空白のパターン（読み飛ばす）
     private final static Pattern SPACE_PATTERN = Pattern.compile("^[\\n\\r\\t\\x20]*", Pattern.MULTILINE);
 
     private final String text; // !< 入力文字列
@@ -78,6 +78,7 @@ public class Lexer {
         case GT:
         case ANDAND:
         case OROR:
+        case VBAR:
         case ARROW:
         case COMMA:
         case NOT:
@@ -86,7 +87,6 @@ public class Lexer {
         case IF:
         case THEN:
         case ELSE:
-        case FN:
         case TRUE:
         case FALSE:
             return new Token.Fixed(kind);
