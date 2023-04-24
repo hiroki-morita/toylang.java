@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * MulDivExpr -> unaryExpr ((STAR|SLASH) unaryExpr)?
  * UnaryExpr -> (NOT)? Apply
  * 
- * Apply -> Primary (ApplyParams)?
+ * Apply -> Primary (ApplyParams)*
  * ApplyParams -> LPAREN (Expr (COMMA Expr)*)? RPAREN
  * 
  * Primary -> LPAREN Expr RPAREN
@@ -268,25 +268,23 @@ public class Parser {
     }
 
     private Expr apply() {
-        final var prim = primary();
-        // Primary Params (=> Apply)
-        if (lookahead().in(Token.Kind.LPAREN)) {
+        var e = primary();
+
+        while (lookahead().in(Token.Kind.LPAREN)) {
             final var params = applyParams();
             // nullary (apply unit)
             if (params.isEmpty()) {
-                return new Expr.Apply(prim, new Expr.Unit());
+                e = new Expr.Apply(e, new Expr.Unit());
             }
             // 関数はカリー化しているので順に apply していく
-            var app = new Expr.Apply(prim, params.pop());
+            var app = new Expr.Apply(e, params.pop());
             while (!params.isEmpty()) {
                 app = new Expr.Apply(app, params.pop());
             }
-            return app;
+            e = app;
         }
-        // Primary
-        else {
-            return prim;
-        }
+
+        return e;
     }
 
     private LinkedList<Expr> applyParams() {
