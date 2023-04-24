@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.regex.Pattern;
 
+/**
+ * ToyLang の REPL（Read-Eval-Print Loop）
+ * python とか irb のように，対話環境でプログラムを実行する
+ */
 public class Repl {
 
     public static void main(String[] args) throws IOException {
@@ -26,6 +30,11 @@ public class Repl {
         }
     }
 
+    /**
+     * ユーザからの入力を受け取る
+     * 
+     * 入力行の末尾に "\" がある場合は次の行を読んで結合する
+     */
     private static String read(BufferedReader reader) throws IOException {
         final var continues = Pattern.compile("^(?<code>.*)\\\\\\s*$");
 

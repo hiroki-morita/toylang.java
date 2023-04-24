@@ -1,26 +1,46 @@
 package toylang;
 
+/**
+ * これ以上簡約できない値
+ */
 public interface Value {
 
+    /**
+     * 二項演算の演算子の種類
+     */
     public enum BinOp {
-        ADD, // +
-        SUB, // -
-        MUL, // *
-        DIV, // /
-        EQ, // =
-        LT, // <
-        GT, // >
-        AND, // and
-        OR, // or
+        ADD, // 加算
+        SUB, // 減算
+        MUL, // 乗算
+        DIV, // 除算
+        EQ, // 等価判定
+        LT, // 比較（小なり）
+        GT, // 比較（大なり）
+        AND, // 論理積
+        OR, // 論理和
     }
 
+    /**
+     * 単項演算の演算子の種類
+     */
     public enum UnaryOp {
-        NOT, // not
-        MINUS, // -
+        NOT, // 論理否定
+        MINUS, // 符号反転
     }
 
+    /**
+     * 二項演算を適用する
+     * @param op 演算子
+     * @param other もう片方のオペランド
+     * @return 演算結果の Value
+     */
     Value applyBinOp(BinOp op, Value other);
 
+    /**
+     * 単項演算を適用する
+     * @param op 演算子
+     * @return 演算結果の Value
+     */
     Value applyUnaryOp(UnaryOp op);
 
     /**
@@ -30,12 +50,20 @@ public interface Value {
      * "call" を使う
      */
     public interface Callable extends Value {
+        /**
+         * 引数 param を適用した値を計算する
+         * @param param 実引数
+         * @return 計算結果の Value
+         */
         Value call(Value param);
     }
 
     @Override
     String toString();
 
+    /**
+     * Unit 型の唯一の値（Java の null みたいな）
+     */
     public class Unit implements Value {
         private static Unit SINGLETON = new Unit();
 
@@ -64,6 +92,9 @@ public interface Value {
         }
     }
 
+    /**
+     * 整数型の値
+     */
     public class Int implements Value {
         final int n;
 
@@ -117,6 +148,9 @@ public interface Value {
         }
     }
 
+    /**
+     * 論理値型の値
+     */
     public class Bool implements Value {
         final boolean b;
 
@@ -163,6 +197,9 @@ public interface Value {
         }
     }
 
+    /**
+     * クロージャ（関数とそれが評価されたときの環境）
+     */
     public class Closure implements Value, Callable {
         final String arg;
         final Expr fn;

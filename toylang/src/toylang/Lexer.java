@@ -5,6 +5,14 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * 字句解析器
+ * 
+ * ユーザが入力したプログラム（単なる文字列）を読み込んで
+ * トークンに変換する
+ * 
+ * 空白・コメントは無視して実際のプログラムに対応する部分のみを返す
+ */
 public class Lexer {
 
     // 空白の正規表現（読み飛ばす）
@@ -25,14 +33,19 @@ public class Lexer {
 
     public Lexer(String text) {
         this.text = text;
+        this.pos = 0;
+        // Token の定義から正規表現を読み出してコンパイルする
         this.patterns = Arrays.stream(Token.Kind.values()) //
                               .filter(k -> k != Token.Kind.EOF) //
                               .map(k -> Pattern.compile("^" + k.pattern)) //
                               .collect(Collectors.toList());
-        this.pos = 0;
 
     }
 
+    /**
+     * 次のトークンを求める
+     * @return 次のトークン（すべて読み終えていたら EOF）
+     */
     public Token next() {
         consumeIgnoreChars();
         if (pos >= text.length()) {
@@ -44,6 +57,9 @@ public class Lexer {
         return tok;
     }
 
+    /**
+     * pos 直後の空白・コメントを消費して読み飛ばす
+     */
     private void consumeIgnoreChars() {
         if (pos >= text.length()) {
             return; // do nothing!
@@ -56,6 +72,10 @@ public class Lexer {
         }
     }
 
+    /**
+     * pos 直後のトークンを読んで返す
+     * @return 読んだトークン
+     */
     private Token tokenize() {
         final String tail = text.substring(pos);
 

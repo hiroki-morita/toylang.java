@@ -38,10 +38,15 @@ import java.util.stream.Collectors;
  *          | FALSE
  */
 public class Parser {
+    // トークン列
     private final List<Token> toks;
-
+    // 現在の入力位置
     private int pos;
 
+    /**
+     * コンストラクタ
+     * @param lexer 字句解析器
+     */
     public Parser(Lexer lexer) {
         this.toks = new ArrayList<>();
         this.pos = 0;
@@ -53,10 +58,18 @@ public class Parser {
         } while (tok.kind() != Token.Kind.EOF);
     }
 
+    /**
+     * 入力が残っているかを判定する
+     * @return 入力が残っていれば true, EOF（入力の終わり）に到達していたら false
+     */
     public boolean hasNext() {
         return toks.get(pos).kind() != Token.Kind.EOF;
     }
 
+    /**
+     * 入力をパースして式のオブジェクトを求める
+     * @return パース結果
+     */
     public Expr parse() {
         return expr();
     }
