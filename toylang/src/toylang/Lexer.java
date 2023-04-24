@@ -67,10 +67,10 @@ public class Lexer {
         }
         // 種類を読んで適切なトークンオブジェクトを返す
         switch (kind) {
-        case ADDOP:
-        case SUBOP:
-        case MULOP:
-        case DIVOP:
+        case PLUS:
+        case MINUS:
+        case STAR:
+        case SLASH:
         case LPAREN:
         case RPAREN:
         case EQ:

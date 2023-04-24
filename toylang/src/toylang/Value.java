@@ -16,6 +16,7 @@ public interface Value {
 
     public enum UnaryOp {
         NOT, // not
+        MINUS, // -
     }
 
     Value applyBinOp(BinOp op, Value other);
@@ -102,7 +103,8 @@ public interface Value {
         @Override
         public Value applyUnaryOp(UnaryOp op) {
             switch (op) {
-            // no operators can be applied to Int
+            case MINUS:
+                return new Value.Int(-n);
             default:
                 final var msg = String.format("cannot '%s' %s.", op, this);
                 throw new RuntimeException(msg);

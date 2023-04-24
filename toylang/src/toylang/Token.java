@@ -7,10 +7,10 @@ public interface Token {
     String text();
 
     public enum Kind {
-        ADDOP("+", "\\+"), // "+"
-        SUBOP("-", "-"), // "-"
-        MULOP("*", "\\*"), // "*"
-        DIVOP("/", "/"), // "/"
+        PLUS("+", "\\+"), // "+"
+        MINUS("-", "-"), // "-"
+        STAR("*", "\\*"), // "*"
+        SLASH("/", "/"), // "/"
         LPAREN("(", "\\("), // "("
         RPAREN(")", "\\)"), // ")"
         EQ("=", "="), // "="
@@ -29,7 +29,7 @@ public interface Token {
         OR("or", "or"), // "or"
         TRUE("true", "true"), // "true"
         FALSE("false", "false"), // "false"
-        INT(null, "-?(0|[1-9][0-9]*)"), // 整数リテラル
+        INT(null, "(?:0|[1-9][0-9]*)"), // 整数リテラル
         IDENT(null, "[a-zA-Z_][a-zA-Z0-9_]*"), // 識別子
         EOF(null, null); // EOF
 

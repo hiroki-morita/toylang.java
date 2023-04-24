@@ -125,7 +125,8 @@ public interface Expr {
 
     public class UnaryOp implements Expr {
         public enum Kind {
-            NOT("not", Value.UnaryOp.NOT); // 論理否定
+            NOT("not", Value.UnaryOp.NOT), // 論理否定
+            MINUS("-", Value.UnaryOp.MINUS); // 負値
 
             final String text;
             final Value.UnaryOp valOp;

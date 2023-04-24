@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
  * 
  * AndOrExpr -> CompareExpr ((AND|OR) CompareExpr)?
  * CompareExpr -> AddSubExpr ((EQ|LT|GT) AddSubExpr)?
- * AddSubExpr -> MulDivExpr ((ADDOP|SUBOP) MulDivExpr)?
- * MulDivExpr -> unaryExpr ((MULOP|DIVOP) unaryExpr)?
+ * AddSubExpr -> MulDivExpr ((PLUS|MINUS) MulDivExpr)?
+ * MulDivExpr -> unaryExpr ((STAR|SLASH) unaryExpr)?
  * UnaryExpr -> (NOT)? Apply
  * 
  * Apply -> Primary (ApplyParams)?
@@ -81,13 +81,13 @@ public class Parser {
 
     private Expr.BinOp.Kind toBinOp(Token.Kind tokKind) {
         switch (tokKind) {
-        case ADDOP:
+        case PLUS:
             return Expr.BinOp.Kind.ADD;
-        case SUBOP:
+        case MINUS:
             return Expr.BinOp.Kind.SUB;
-        case MULOP:
+        case STAR:
             return Expr.BinOp.Kind.MUL;
-        case DIVOP:
+        case SLASH:
             return Expr.BinOp.Kind.DIV;
         case EQ:
             return Expr.BinOp.Kind.EQ;
@@ -99,6 +99,17 @@ public class Parser {
             return Expr.BinOp.Kind.AND;
         case OR:
             return Expr.BinOp.Kind.OR;
+        default:
+            throw new IllegalArgumentException("Unexpected value: " + tokKind);
+        }
+    }
+
+    private Expr.UnaryOp.Kind toUnaryOp(Token.Kind tokKind) {
+        switch (tokKind) {
+        case NOT:
+            return Expr.UnaryOp.Kind.NOT;
+        case MINUS:
+            return Expr.UnaryOp.Kind.MINUS;
         default:
             throw new IllegalArgumentException("Unexpected value: " + tokKind);
         }
@@ -218,8 +229,8 @@ public class Parser {
     private Expr addSubExpr() {
         final var l = mulDivExpr();
         // MulDivExpr (ADDOP|SUBOP) MulDivExpr
-        if (lookahead().in(Token.Kind.ADDOP, Token.Kind.SUBOP)) {
-            final var op = consume(Token.Kind.ADDOP, Token.Kind.SUBOP);
+        if (lookahead().in(Token.Kind.PLUS, Token.Kind.MINUS)) {
+            final var op = consume(Token.Kind.PLUS, Token.Kind.MINUS);
             final var r = mulDivExpr();
             return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }
@@ -232,8 +243,8 @@ public class Parser {
     private Expr mulDivExpr() {
         final var l = unaryExpr();
         // Primary (MULOP|DIVOP) Primary
-        if (lookahead().in(Token.Kind.MULOP, Token.Kind.DIVOP)) {
-            final var op = consume(Token.Kind.MULOP, Token.Kind.DIVOP);
+        if (lookahead().in(Token.Kind.STAR, Token.Kind.SLASH)) {
+            final var op = consume(Token.Kind.STAR, Token.Kind.SLASH);
             final var r = unaryExpr();
             return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }
@@ -244,11 +255,11 @@ public class Parser {
     }
 
     private Expr unaryExpr() {
-        // NOT Expr
-        if (lookahead().in(Token.Kind.NOT)) {
-            consume(Token.Kind.NOT);
+        // (NOT|MINUS) Expr
+        if (lookahead().in(Token.Kind.NOT, Token.Kind.MINUS)) {
+            final var op = consume(Token.Kind.NOT, Token.Kind.MINUS);
             final var e = apply();
-            return new Expr.UnaryOp(Expr.UnaryOp.Kind.NOT, e);
+            return new Expr.UnaryOp(toUnaryOp(op.kind()), e);
         }
         // Expr
         else {
