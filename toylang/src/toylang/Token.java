@@ -16,8 +16,6 @@ public interface Token {
         EQ("=", "="), // "="
         LT("<", "<"), // "<"
         GT(">", ">"), // ">"
-        ANDAND("&&", "&&"), // "&&"
-        OROR("||", "\\|\\|(?!\\s*=>)"), // "||", not followed by "=>"
         VBAR("|", "\\|"), // "|"
         ARROW("=>", "=>"), // "=>"
         COMMA(",", ","), // ","
@@ -27,6 +25,8 @@ public interface Token {
         IF("if", "if"), // "if"
         THEN("then", "then"), // "then"
         ELSE("else", "else"), // "else"
+        AND("and", "and"), // "and"
+        OR("or", "or"), // "or"
         TRUE("true", "true"), // "true"
         FALSE("false", "false"), // "false"
         INT(null, "-?(0|[1-9][0-9]*)"), // 整数リテラル

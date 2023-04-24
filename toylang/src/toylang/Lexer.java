@@ -76,8 +76,6 @@ public class Lexer {
         case EQ:
         case LT:
         case GT:
-        case ANDAND:
-        case OROR:
         case VBAR:
         case ARROW:
         case COMMA:
@@ -87,6 +85,8 @@ public class Lexer {
         case IF:
         case THEN:
         case ELSE:
+        case AND:
+        case OR:
         case TRUE:
         case FALSE:
             return new Token.Fixed(kind);

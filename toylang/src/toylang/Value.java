@@ -10,8 +10,8 @@ public interface Value {
         EQ, // =
         LT, // <
         GT, // >
-        AND, // &&
-        OR, // ||
+        AND, // and
+        OR, // or
     }
 
     public enum UnaryOp {

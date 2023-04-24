@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * 
  * FnExpr -> VBAR (IDENT (COMMA IDENT)*)? VBAR ARROW Expr
  * 
- * AndOrExpr -> CompareExpr ((ANDAND|OROR) CompareExpr)?
+ * AndOrExpr -> CompareExpr ((AND|OR) CompareExpr)?
  * CompareExpr -> AddSubExpr ((EQ|LT|GT) AddSubExpr)?
  * AddSubExpr -> MulDivExpr ((ADDOP|SUBOP) MulDivExpr)?
  * MulDivExpr -> unaryExpr ((MULOP|DIVOP) unaryExpr)?
@@ -95,9 +95,9 @@ public class Parser {
             return Expr.BinOp.Kind.LT;
         case GT:
             return Expr.BinOp.Kind.GT;
-        case ANDAND:
+        case AND:
             return Expr.BinOp.Kind.AND;
-        case OROR:
+        case OR:
             return Expr.BinOp.Kind.OR;
         default:
             throw new IllegalArgumentException("Unexpected value: " + tokKind);
@@ -190,8 +190,8 @@ public class Parser {
     private Expr andOrExpr() {
         final var l = compareExpr();
         // CompareExpr (ANDAND|OROR) CompareExpr
-        if (lookahead().in(Token.Kind.ANDAND, Token.Kind.OROR)) {
-            final var op = consume(Token.Kind.ANDAND, Token.Kind.OROR);
+        if (lookahead().in(Token.Kind.AND, Token.Kind.OR)) {
+            final var op = consume(Token.Kind.AND, Token.Kind.OR);
             final var r = compareExpr();
             return new Expr.BinOp(toBinOp(op.kind()), l, r);
         }

@@ -88,8 +88,8 @@ public interface Expr {
             EQ("=", Value.BinOp.EQ), // 比較（等価）
             LT("<", Value.BinOp.LT), // 比較（小なり）
             GT(">", Value.BinOp.GT), // 比較（大なり）
-            AND("&&", Value.BinOp.AND), // 論理積
-            OR("||", Value.BinOp.OR); // 論理和
+            AND("and", Value.BinOp.AND), // 論理積
+            OR("or", Value.BinOp.OR); // 論理和
 
             final String text;
             final Value.BinOp valOp;
