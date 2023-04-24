@@ -53,6 +53,10 @@ public class Parser {
         } while (tok.kind() != Token.Kind.EOF);
     }
 
+    public boolean hasNext() {
+        return toks.get(pos).kind() != Token.Kind.EOF;
+    }
+
     public Expr parse() {
         return expr();
     }
