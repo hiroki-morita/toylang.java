@@ -7,13 +7,21 @@ import java.util.stream.Collectors;
 
 public class Lexer {
 
-    // ! 空白のパターン（読み飛ばす）
-    private final static Pattern SPACE_PATTERN = Pattern.compile("^[\\n\\r\\t\\x20]*", Pattern.MULTILINE);
+    // 空白の正規表現（読み飛ばす）
+    private final static String SPACE_REGEX = "[\\n\\r\\t\\x20]+";
+    // コメントの正規表現（読み飛ばす）
+    private final static String COMMENT_REGEX = "//[^\\r\\n]*|/\\*(?:(?!\\*/).)*\\*/";
+    // 読み飛ばす文字列のパターン
+    private final static Pattern IGNORE_PATTERN = //
+            Pattern.compile("^(?:" + SPACE_REGEX + "|" + COMMENT_REGEX + ")*", Pattern.MULTILINE);
 
-    private final String text; // !< 入力文字列
-    private final List<Pattern> patterns; // !< トークンのパターン
+    // 入力文字列
+    private final String text;
+    // 各トークンのパターン
+    private final List<Pattern> patterns;
 
-    private int pos; // !< 解析位置
+    // 現在の入力インデックス
+    private int pos;
 
     public Lexer(String text) {
         this.text = text;
@@ -26,7 +34,7 @@ public class Lexer {
     }
 
     public Token next() {
-        consumeSpaces();
+        consumeIgnoreChars();
         if (pos >= text.length()) {
             return new Token.Eof();
         }
@@ -36,12 +44,12 @@ public class Lexer {
         return tok;
     }
 
-    private void consumeSpaces() {
+    private void consumeIgnoreChars() {
         if (pos >= text.length()) {
             return; // do nothing!
         }
         final var tail = text.substring(pos);
-        final var m = SPACE_PATTERN.matcher(tail);
+        final var m = IGNORE_PATTERN.matcher(tail);
         if (m.find()) {
             final var s = m.group();
             pos += s.length();
