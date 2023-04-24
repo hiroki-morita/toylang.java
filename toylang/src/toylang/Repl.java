@@ -14,11 +14,15 @@ public class Repl {
         String text = null;
         Env env = new Env();
         while ((text = read(reader)) != null) {
-            final var lexer = new Lexer(text);
-            final var parser = new Parser(lexer);
-            final var e = parser.parse();
-            System.out.println(e);
-            System.out.println(e.eval(env));
+            try {
+                final var lexer = new Lexer(text);
+                final var parser = new Parser(lexer);
+                final var e = parser.parse();
+                System.out.println(e);
+                System.out.println(e.eval(env));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
