@@ -8,6 +8,9 @@ public class Env {
     private final Map<String, Value> map;
     private final Env outer;
 
+    // toString() 中 true にする（無限再帰を防ぐため）
+    private boolean nowStringify = false;
+
     private Env(Map<String, Value> map, Env outer) {
         this.map = map;
         this.outer = outer;
@@ -46,10 +49,18 @@ public class Env {
 
     @Override
     public String toString() {
+        if (nowStringify) {
+            return "...";
+        }
+        nowStringify = true;
+
         final var otr = outer == null ? "{}" : outer.toString();
         final var kvs = map.keySet().stream() //
                            .map(k -> String.format("%s:%s", k, map.get(k))) //
                            .collect(Collectors.joining(","));
-        return String.format("{%s, %s}", kvs, otr);
+        final var s = String.format("{%s, %s}", kvs, otr);
+
+        nowStringify = false;
+        return s;
     }
 }

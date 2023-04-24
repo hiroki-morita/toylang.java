@@ -245,8 +245,9 @@ public interface Expr {
 
         @Override
         public Value eval(Env env) {
-            // TODO: env を deepcopy しないとバグる？（shallow copy は必須）
-            return new Value.Closure(arg, e, env.copy());
+            // TODO: 環境を shallow/deep copy しなくてもよいか調査
+            // コピーが必要な場合は再帰関数のために let rec を導入する必要がある
+            return new Value.Closure(arg, e, env);
         }
 
         @Override
